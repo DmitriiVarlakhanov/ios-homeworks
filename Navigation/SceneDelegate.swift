@@ -22,7 +22,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let feedNavigationController = UINavigationController(rootViewController: feedViewController)
         let profileNavigationController = UINavigationController(rootViewController: logInViewController)
 
-        profileNavigationController.navigationBar.isHidden = true
+        profileNavigationController.navigationBar.isHidden = false
 
         feedNavigationController.tabBarItem = UITabBarItem(title: "Feed", image: UIImage(systemName: "globe") , tag: 0)
         profileNavigationController.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle") , tag: 1)
