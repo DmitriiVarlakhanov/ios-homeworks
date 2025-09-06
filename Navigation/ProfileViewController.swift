@@ -21,6 +21,7 @@ class ProfileViewController: UIViewController {
 
     private enum CellReuseID: String {
         case firstCustom = "PostTableViewCell_ReuseID"
+        case secondCustom = "PhotosTableViewCell_ReuseID"
     }
 
     fileprivate let data = PostModel.make()
@@ -30,14 +31,21 @@ class ProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.title = "Profile"
-
         self.view.backgroundColor = .systemGray6
 
         self.view.addSubview(profileTableView)
 
         setupConstraints()
         setupTableView()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        self.navigationItem.title = "Profile"
+        self.navigationController?.navigationBar.isHidden = true
+
+        profileTableView.indexPathsForSelectedRows?.forEach { profileTableView.deselectRow(at: $0, animated: false) }
     }
 
     override func viewWillLayoutSubviews() {
@@ -58,15 +66,21 @@ class ProfileViewController: UIViewController {
     }
 
     private func setupTableView() {
+        profileTableView.backgroundColor = .systemGray6
+
         profileTableView.rowHeight = UITableView.automaticDimension
 
-        let profileHeaderView = ProfileHeaderView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 230))
-        profileTableView.tableHeaderView = profileHeaderView
+        profileTableView.tableHeaderView = UIView()
         profileTableView.tableFooterView = UIView()
 
         profileTableView.register(
             PostTableViewCell.self,
             forCellReuseIdentifier: CellReuseID.firstCustom.rawValue
+        )
+
+        profileTableView.register(
+            PhotosTableViewCell.self,
+            forCellReuseIdentifier: CellReuseID.secondCustom.rawValue
         )
 
         profileTableView.dataSource = self
@@ -75,23 +89,66 @@ class ProfileViewController: UIViewController {
 }
 
 extension ProfileViewController: UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        2
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: CellReuseID.firstCustom.rawValue,
-            for: indexPath
-        ) as? PostTableViewCell else {
-            fatalError("could not dequeueReusableCell")
+        if indexPath.section == 1 {
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: CellReuseID.firstCustom.rawValue,
+                for: indexPath
+            ) as? PostTableViewCell else {
+                fatalError("could not dequeueReusableCell")
+            }
+
+            cell.update(data[indexPath.row])
+
+            return cell
+        } else {
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: CellReuseID.secondCustom.rawValue,
+                for: indexPath
+            ) as? PhotosTableViewCell else {
+                fatalError("could not dequeueReusableCell")
+            }
+
+            return cell
         }
-
-        cell.update(data[indexPath.row])
-
-        return cell
     }
     
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        4
+        if section == 1 {
+            data.count
+        } else {
+            1
+        }
     }
 }
 
-extension ProfileViewController: UITableViewDelegate { }
+extension ProfileViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        if section == 0 {
+            return ProfileHeaderView()
+        } else {
+            return nil
+        }
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if section == 0 {
+            return 230
+        } else {
+            return 0
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            let photosViewController = PhotosViewController()
+
+            self.navigationController?.pushViewController(photosViewController, animated: true)
+        }
+    }
+}
