@@ -25,6 +25,14 @@ class ProfileHeaderView: UIView {
         myImageView.layer.borderColor = UIColor.white.cgColor
         myImageView.layer.borderWidth = 3
 
+        myImageView.isUserInteractionEnabled = true
+
+        let tapGestureRecognizer = UITapGestureRecognizer(
+            target: self,
+            action: #selector(profileImageTapped)
+        )
+        myImageView.addGestureRecognizer(tapGestureRecognizer)
+
         return myImageView
     }()
 
@@ -80,16 +88,45 @@ class ProfileHeaderView: UIView {
         return myCustomTextField
     }()
 
+    private lazy var semitransperentView: UIView = {
+        let semitransperentView = UIView(frame: ProfileViewController().view.frame)
+
+        semitransperentView.backgroundColor = .white
+        semitransperentView.alpha = 0
+
+        return semitransperentView
+    }()
+
+    private lazy var buttonX: UIButton = {
+        let buttonX = UIButton(frame: CGRect(
+            x: Int(ProfileViewController().view.frame.width) - 50,
+            y: Int(ProfileViewController().view.frame.minY),
+            width: 50,
+            height: 50
+        ))
+
+        buttonX.setImage(UIImage(systemName: "xmark"), for: .normal)
+        buttonX.tintColor = .black
+        buttonX.alpha = 0
+        buttonX.addTarget(self, action: #selector(quitProfileImageTapped), for: .touchUpInside)
+
+        return buttonX
+    }()
+
+    private lazy var globalCenterMyImageView: CGPoint? = nil
+
     // MARK: - Initialization
 
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        self.addSubview(myImageView)
         self.addSubview(myProfileNameLabel)
         self.addSubview(myStatusLabel)
         self.addSubview(myShowStatusButton)
         self.addSubview(myCustomTextField)
+        self.addSubview(semitransperentView)
+        self.addSubview(buttonX)
+        self.addSubview(myImageView)
 
         setupView()
         setupConstraints()
@@ -108,6 +145,70 @@ class ProfileHeaderView: UIView {
 
     @objc func statusTextChanged(_ textField: UITextField) {
         statusText = textField.text ?? ""
+    }
+
+    @objc func profileImageTapped() {
+        let centerMyImageView = myImageView.center
+        globalCenterMyImageView = centerMyImageView
+
+        UIView.animateKeyframes(
+            withDuration: 0.8,
+            delay: 0,
+            animations: {
+                UIView.addKeyframe(
+                    withRelativeStartTime: 0,
+                    relativeDuration: 0.625,
+                    animations: {
+                        self.bringSubviewToFront(self.myImageView)
+                        self.myImageView.center = CGPoint(
+                            x: ProfileViewController().view.bounds.midX,
+                            y: ProfileViewController().view.bounds.midY - 100
+                        )
+                        self.myImageView.transform = CGAffineTransform(
+                            scaleX: UIScreen.main.bounds.width / self.myImageView.bounds.width,
+                            y: UIScreen.main.bounds.width / self.myImageView.bounds.width
+                        )
+                        self.myImageView.layer.cornerRadius = 0
+
+                        self.semitransperentView.alpha = 0.5
+                    }
+                )
+                UIView.addKeyframe(
+                    withRelativeStartTime: 0.625,
+                    relativeDuration: 0.375,
+                    animations: {
+                        self.buttonX.alpha = 1
+                    }
+                )
+            }
+        )
+    }
+
+    @objc func quitProfileImageTapped() {
+        UIView.animateKeyframes(
+            withDuration: 0.8,
+            delay: 0,
+            animations: {
+                UIView.addKeyframe(
+                    withRelativeStartTime: 0,
+                    relativeDuration: 0.375,
+                    animations: {
+                        self.buttonX.alpha = 0
+                    }
+                )
+                UIView.addKeyframe(
+                    withRelativeStartTime: 0.375,
+                    relativeDuration: 0.625,
+                    animations: {
+                        self.myImageView.center = self.globalCenterMyImageView!
+                        self.myImageView.transform = .identity
+                        self.myImageView.layer.cornerRadius = 64
+
+                        self.semitransperentView.alpha = 0
+                    }
+                )
+            }
+        )
     }
 
     // MARK: - Private
